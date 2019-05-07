@@ -24,7 +24,7 @@ public class MemTable implements MyTable {
     public void upsert(@NotNull final ByteBuffer key, final ByteBuffer value) {
         final Row newRow = Row.of(key, value);
         memoryTable.put(key, newRow);
-        size += 2 * Integer.BYTES + Long.BYTES + key.remaining() + value.remaining();
+        size += Integer.BYTES + Integer.BYTES + Long.BYTES + key.remaining() + value.remaining();
     }
 
     @Override
@@ -38,7 +38,8 @@ public class MemTable implements MyTable {
         return size;
     }
 
-    /** restores data from memory to storage
+    /**
+     * Restores data from memory to storage
      *
      * @param fileChannel where to store
      * @throws IOException if it is impossible to store

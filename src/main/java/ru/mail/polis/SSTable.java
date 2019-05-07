@@ -15,7 +15,8 @@ public class SSTable implements MyTable {
     private final IntBuffer offsets;
     private final ByteBuffer rows;
 
-    /** storage of data
+    /**
+     * Storage of data
      *
      * @param fileChannel where to write data
      * @throws IOException if it is impossible to store
