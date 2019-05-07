@@ -26,8 +26,7 @@ public class MyPersDAO implements DAO {
     private final MemTable memTable;
     private final List<SSTable> storage;
 
-    /**
-     * persistence DAO
+    /** persistence DAO
      *
      * @param dir directory with files
      * @param maxSize maximum size of memtable

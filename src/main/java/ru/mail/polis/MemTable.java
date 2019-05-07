@@ -11,26 +11,26 @@ import java.util.TreeMap;
 
 public class MemTable implements MyTable {
 
-    private final NavigableMap<ByteBuffer, Row> memtable = new TreeMap<>();
+    private final NavigableMap<ByteBuffer, Row> memoryTable = new TreeMap<>();
     private long size;
 
     @NotNull
     @Override
     public Iterator<Row> iterator(@NotNull final ByteBuffer from) {
-        return memtable.tailMap(from).values().iterator();
+        return memoryTable.tailMap(from).values().iterator();
     }
 
     @Override
     public void upsert(@NotNull final ByteBuffer key, final ByteBuffer value) {
         final Row newRow = Row.of(key, value);
-        memtable.put(key, newRow);
+        memoryTable.put(key, newRow);
         size += 2 * Integer.BYTES + Long.BYTES + key.remaining() + value.remaining();
     }
 
     @Override
     public void remove(@NotNull final ByteBuffer key) {
         final Row tombstone = Row.ofTombstone(key);
-        memtable.put(key, tombstone);
+        memoryTable.put(key, tombstone);
         size += Integer.BYTES + Long.BYTES + key.remaining();
     }
 
@@ -38,15 +38,16 @@ public class MemTable implements MyTable {
         return size;
     }
 
-    /**
-     * @param fileChannel
-     * @throws IOException
+    /** restores data from memory to storage
+     *
+     * @param fileChannel where to store
+     * @throws IOException if it is impossible to store
      */
     public void flush(final FileChannel fileChannel) throws IOException {
-        final ByteBuffer offsets = ByteBuffer.allocate(memtable.size() * Integer.BYTES);
+        final ByteBuffer offsets = ByteBuffer.allocate(memoryTable.size() * Integer.BYTES);
         final ByteBuffer rows = ByteBuffer.allocate(Integer.BYTES);
         int offset = 0;
-        for (final Row row : memtable.values()) {
+        for (final Row row : memoryTable.values()) {
             offsets.putInt(offset);
             final ByteBuffer rowBuffer = ByteBuffer.allocate(row.getSize());
             final ByteBuffer key = row.getKey();
@@ -67,10 +68,10 @@ public class MemTable implements MyTable {
         }
         offsets.rewind();
         fileChannel.write(offsets);
-        rows.putInt(memtable.size());
+        rows.putInt(memoryTable.size());
         rows.rewind();
         fileChannel.write(rows);
-        memtable.clear();
+        memoryTable.clear();
         size = 0;
     }
 }

@@ -15,11 +15,10 @@ public class SSTable implements MyTable {
     private final IntBuffer offsets;
     private final ByteBuffer rows;
 
-    /**
-     * storage of data
+    /** storage of data
      *
      * @param fileChannel where to write data
-     * @throws IOException
+     * @throws IOException if it is impossible to store
      */
     public SSTable(final FileChannel fileChannel) throws IOException {
         final ByteBuffer byteBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0,

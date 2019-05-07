@@ -14,8 +14,7 @@ public class Row {
     public static final Comparator<Row> comparator = Comparator.comparing(Row::getKey).thenComparing(Row::getValue)
             .thenComparing(Row::getTimestamp);
 
-    /**
-     * one line in storage with information about one record
+    /** one line in storage with information about one record
      *
      * @param key uniq identifier
      * @param value data
