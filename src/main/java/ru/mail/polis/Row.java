@@ -15,9 +15,11 @@ public class Row {
             .thenComparing(Row::getTimestamp);
 
     /**
-     * @param key
-     * @param value
-     * @param timestamp
+     * one line in storage with information about one record
+     *
+     * @param key uniq identifier
+     * @param value data
+     * @param timestamp when the record was created
      */
     public Row(@NotNull final ByteBuffer key, final ByteBuffer value, final long timestamp) {
         this.key = key;

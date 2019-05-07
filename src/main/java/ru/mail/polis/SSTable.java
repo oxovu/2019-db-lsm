@@ -16,7 +16,9 @@ public class SSTable implements MyTable {
     private final ByteBuffer rows;
 
     /**
-     * @param fileChannel
+     * storage of data
+     *
+     * @param fileChannel where to write data
      * @throws IOException
      */
     public SSTable(final FileChannel fileChannel) throws IOException {

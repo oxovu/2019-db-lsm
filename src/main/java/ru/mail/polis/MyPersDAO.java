@@ -27,8 +27,10 @@ public class MyPersDAO implements DAO {
     private final List<SSTable> storage;
 
     /**
-     * @param dir
-     * @param maxSize
+     * persistence DAO
+     *
+     * @param dir directory with files
+     * @param maxSize maximum size of memtable
      */
     public MyPersDAO(@NotNull final File dir, @NotNull final long maxSize) {
         this.dir = dir;
