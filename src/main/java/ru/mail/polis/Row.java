@@ -14,7 +14,12 @@ public class Row {
     public static final Comparator<Row> comparator = Comparator.comparing(Row::getKey).thenComparing(Row::getValue)
             .thenComparing(Row::getTimestamp);
 
-    public Row(@NotNull ByteBuffer key, ByteBuffer value, long timestamp) {
+    /**
+     * @param key
+     * @param value
+     * @param timestamp
+     */
+    public Row(@NotNull final ByteBuffer key, final ByteBuffer value, final long timestamp) {
         this.key = key;
         this.value = value;
         this.timestamp = timestamp;
@@ -32,11 +37,11 @@ public class Row {
         return key;
     }
 
-    public static Row of(@NotNull ByteBuffer key, ByteBuffer value) {
+    public static Row of(@NotNull final ByteBuffer key, final ByteBuffer value) {
         return new Row(key, value, System.currentTimeMillis());
     }
 
-    public static Row ofData(@NotNull ByteBuffer key, ByteBuffer value, long tombstone) {
+    public static Row ofData(@NotNull final ByteBuffer key, final ByteBuffer value, final long tombstone) {
         return new Row(key, value, tombstone);
     }
 
@@ -44,7 +49,7 @@ public class Row {
         return this.timestamp < 0;
     }
 
-    public static Row ofTombstone(@NotNull ByteBuffer key) {
+    public static Row ofTombstone(@NotNull final ByteBuffer key) {
         return new Row(key, null, System.currentTimeMillis() * -1);
     }
 

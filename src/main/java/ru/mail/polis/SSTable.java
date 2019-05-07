@@ -2,23 +2,25 @@ package ru.mail.polis;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.StandardOpenOption;
 import java.util.Iterator;
 
 public class SSTable implements MyTable {
 
-    private int rowsNum;
-    private IntBuffer offsets;
-    private ByteBuffer rows;
+    private final int rowsNum;
+    private final IntBuffer offsets;
+    private final ByteBuffer rows;
 
-    public SSTable(FileChannel fileChannel, StandardOpenOption read) throws IOException {
-        ByteBuffer byteBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0,
+    /**
+     * @param fileChannel
+     * @throws IOException
+     */
+    public SSTable(final FileChannel fileChannel) throws IOException {
+        final ByteBuffer byteBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0,
                 fileChannel.size()).order(ByteOrder.BIG_ENDIAN);
         this.rowsNum = byteBuffer.getInt(byteBuffer.limit() - Integer.BYTES);
         this.offsets = byteBuffer.duplicate().position(byteBuffer.limit() - Integer.BYTES * (rowsNum + 1))
@@ -29,7 +31,7 @@ public class SSTable implements MyTable {
 
     @NotNull
     @Override
-    public Iterator<Row> iterator(@NotNull ByteBuffer from) {
+    public Iterator<Row> iterator(@NotNull final ByteBuffer from) {
         return new Iterator<>() {
             private int pos = getPosition(from);
 
@@ -45,21 +47,26 @@ public class SSTable implements MyTable {
         };
     }
 
-    private int getPosition(@NotNull ByteBuffer key) {
+    private int getPosition(@NotNull final ByteBuffer key) {
         int left = 0;
         int right = rowsNum - 1;
         while (left <= right) {
             final int mid = left + (right - left) / 2;
             final int cmp = keyAt(mid).compareTo(key);
-            if (cmp < 0) left = mid + 1;
-            else if (cmp > 0) right = mid - 1;
-            else return mid;
+            if (cmp < 0) {
+                left = mid + 1;
+            } else if (cmp > 0) {
+                right = mid - 1;
+            } else return mid;
         }
         return left;
     }
 
-    private ByteBuffer keyAt(int position) {
-        if (position < 0 || position > rowsNum) return null;
+    @NotNull
+    private ByteBuffer keyAt(final int position) {
+        if (position < 0 || position > rowsNum) {
+            throw new IllegalArgumentException();
+        }
 
         final int offset = offsets.get(position);
         final int keySize = rows.getInt(offset);
@@ -67,31 +74,31 @@ public class SSTable implements MyTable {
                 .slice().asReadOnlyBuffer();
     }
 
-    private Row getRow(int position) {
+    private Row getRow(final int position) {
         if (position < 0 || position > rowsNum) return null;
 
         int offset = offsets.get(position);
-        int keySize = rows.getInt(offset);
-        ByteBuffer key = rows.duplicate().position(offset).limit(offset + keySize).slice().asReadOnlyBuffer();
+        final int keySize = rows.getInt(offset);
+        final ByteBuffer key = rows.duplicate().position(offset).limit(offset + keySize).slice().asReadOnlyBuffer();
         offset += keySize;
-        long timestamp = rows.position(offset).getLong();
+        final long timestamp = rows.position(offset).getLong();
         offset += Long.BYTES;
         if (timestamp < 0) {
             return Row.ofData(key, null, -1 * timestamp);
         }
-        int valSize = rows.get(offset);
+        final int valSize = rows.get(offset);
         offset += Integer.BYTES;
-        ByteBuffer value = rows.duplicate().position(offset).limit(offset + valSize).slice().asReadOnlyBuffer();
+        final ByteBuffer value = rows.duplicate().position(offset).limit(offset + valSize).slice().asReadOnlyBuffer();
         return Row.ofData(key, value, timestamp);
     }
 
     @Override
-    public void upsert(@NotNull ByteBuffer key, ByteBuffer value) {
+    public void upsert(@NotNull final ByteBuffer key, final ByteBuffer value) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void remove(@NotNull ByteBuffer key) {
+    public void remove(@NotNull final ByteBuffer key) {
         throw new UnsupportedOperationException();
     }
 }
