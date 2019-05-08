@@ -15,7 +15,7 @@ public class Row {
             .thenComparing(Row::getTimestamp);
 
     /**
-     * One line in storage with information about one record
+     * One line in storage with information about one record.
      *
      * @param key uniq identifier
      * @param value data

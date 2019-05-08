@@ -27,12 +27,12 @@ public class MyPersDAO implements DAO {
     private final List<SSTable> storage;
 
     /**
-     * Persistence DAO
+     * Persistence DAO.
      *
      * @param dir directory with files
-     * @param maxSize maximum size of memtable
+     * @param maxSize maximum size of memory table
      */
-    public MyPersDAO(@NotNull final File dir, @NotNull final long maxSize) {
+    public MyPersDAO(@NotNull final File dir, @NotNull final long maxSize) throws IOException {
         this.dir = dir;
         this.maxSize = maxSize;
         memTable = new MemTable();
@@ -40,15 +40,11 @@ public class MyPersDAO implements DAO {
         readStorage();
     }
 
-    private void readStorage() {
+    private void readStorage() throws IOException {
         for (final File file : Objects.requireNonNull(dir.listFiles())) {
             if (file.getName().endsWith(SUFFIX)) {
-                try {
-                    final SSTable newSStable = new SSTable(FileChannel.open(Path.of(file.getAbsolutePath())));
-                    storage.add(newSStable);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                final SSTable newSStable = new SSTable(FileChannel.open(Path.of(file.getAbsolutePath())));
+                storage.add(newSStable);
             }
         }
     }

@@ -39,7 +39,7 @@ public class MemTable implements MyTable {
     }
 
     /**
-     * Restores data from memory to storage
+     * Restores data from memory to storage.
      *
      * @param fileChannel where to store
      * @throws IOException if it is impossible to store
