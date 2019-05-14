@@ -104,7 +104,7 @@ public class SSTable implements MyTable {
         final long timestamp = rows.position(offset).getLong();
         offset += Long.BYTES;
         if (timestamp < 0) {
-            return new Row(key, new Value(Value.EMPTY_BUFFER, timestamp * -1, true));
+            return new Row(key, new Value(Value.EMPTY, timestamp * -1, true));
         }
         final int valSize = rows.getInt(offset);
         offset += Integer.BYTES;
@@ -155,5 +155,9 @@ public class SSTable implements MyTable {
             final ByteBuffer size = ByteBuffer.allocate(Integer.BYTES).putInt(offsets.size()).rewind();
             channel.write(size);
         }
+    }
+
+    public Path getPath() {
+        return path;
     }
 }

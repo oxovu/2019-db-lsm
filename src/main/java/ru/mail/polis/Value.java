@@ -9,7 +9,7 @@ public class Value implements Comparable<Value> {
     private final long timestamp;
     private final boolean isTombstone;
 
-    static final ByteBuffer EMPTY_BUFFER = ByteBuffer.allocate(0);
+    static final ByteBuffer EMPTY = ByteBuffer.allocate(0);
 
     public Value(@NotNull ByteBuffer data, final long timestamp, final boolean isTombstone) {
         this.data = data;
@@ -22,9 +22,8 @@ public class Value implements Comparable<Value> {
     }
 
     public static Value ofTombstone() {
-        return new Value(EMPTY_BUFFER, System.currentTimeMillis(), true);
+        return new Value(EMPTY, System.currentTimeMillis(), true);
     }
-
 
     public int getSize() {
         if (isTombstone) {

@@ -99,7 +99,22 @@ public class MyPersDAO implements DAO {
         memTable.flush(Path.of(path, tmpName));
         Files.move(Path.of(path, tmpName), Path.of(path, Name), StandardCopyOption.ATOMIC_MOVE);
         storage.add(new SSTable(Path.of(path, Name)));
+    }
 
-
+    @Override
+    public void compact() throws IOException {
+        final Iterator<Row> rowIter = rowIterator(Value.EMPTY);
+        final String time = String.valueOf(System.currentTimeMillis());
+        final String tmpName = time + TMP_SUFFIX;
+        final String Name = time + SUFFIX;
+        final String path = dir.getAbsolutePath();
+        SSTable.writeToFile(Path.of(path, tmpName), rowIter);
+        for (final SSTable s : storage) {
+            Files.delete(s.getPath());
+        }
+        storage.clear();
+        memTable.clear();
+        Files.move(Path.of(path, tmpName), Path.of(path, Name), StandardCopyOption.ATOMIC_MOVE);
+        storage.add(new SSTable(Path.of(path, Name)));
     }
 }

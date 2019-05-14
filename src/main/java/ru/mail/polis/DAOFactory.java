@@ -53,6 +53,6 @@ public final class DAOFactory {
             throw new IllegalArgumentException("Path is not a directory: " + data);
         }
 
-        return new MyPersDAO(data, MAX_HEAP/16);
+        return new MyPersDAO(data, MAX_HEAP / 32);
     }
 }

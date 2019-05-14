@@ -54,6 +54,10 @@ public class MemTable implements MyTable {
      */
     public void flush(final Path path) throws IOException {
         SSTable.writeToFile(path, memoryTable.values().iterator());
+        clear();
+    }
+
+    public void clear() {
         memoryTable = new TreeMap<>();
         size = 0;
     }
