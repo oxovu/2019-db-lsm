@@ -122,6 +122,13 @@ public class SSTable implements MyTable {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Writes to file the rows with keys and values, offsets and rows number
+     *
+     * @param path where to write
+     * @param iterator just iterator
+     * @throws IOException if occurs
+     */
     public static void writeToFile(@NotNull final Path path, @NotNull final Iterator<Row> iterator) throws IOException {
         try (FileChannel channel = FileChannel.open(path, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
             final List<Integer> offsets = new ArrayList<>();

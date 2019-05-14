@@ -11,13 +11,20 @@ public class Value implements Comparable<Value> {
 
     static final ByteBuffer EMPTY = ByteBuffer.allocate(0);
 
-    public Value(@NotNull ByteBuffer data, final long timestamp, final boolean isTombstone) {
+    /**
+     * Class for storing data in row
+     *
+     * @param data what to record
+     * @param timestamp when the record was created
+     * @param isTombstone if record was deleted
+     */
+    public Value(@NotNull final ByteBuffer data, final long timestamp, final boolean isTombstone) {
         this.data = data;
         this.timestamp = timestamp;
         this.isTombstone = isTombstone;
     }
 
-    public static Value of(@NotNull ByteBuffer data) {
+    public static Value of(@NotNull final ByteBuffer data) {
         return new Value(data, System.currentTimeMillis(), false);
     }
 
@@ -25,6 +32,9 @@ public class Value implements Comparable<Value> {
         return new Value(EMPTY, System.currentTimeMillis(), true);
     }
 
+    /**
+     * @return necessary size to store value
+     */
     public int getSize() {
         if (isTombstone) {
             return Long.BYTES;
