@@ -8,30 +8,22 @@ import java.util.Comparator;
 public class Row {
 
     private final ByteBuffer key;
-    private final ByteBuffer value;
-    private final long timestamp;
+    private final Value value;
 
-    public static final Comparator<Row> comparator = Comparator.comparing(Row::getKey).thenComparing(Row::getValue)
-            .thenComparing(Row::getTimestamp);
+    public static final Comparator<Row> comparator = Comparator.comparing(Row::getKey).thenComparing(Row::getValue);
 
     /**
      * One line in storage with information about one record.
      *
      * @param key uniq identifier
      * @param value data
-     * @param timestamp when the record was created
      */
-    public Row(@NotNull final ByteBuffer key, final ByteBuffer value, final long timestamp) {
+    public Row(@NotNull final ByteBuffer key, final Value value) {
         this.key = key;
         this.value = value;
-        this.timestamp = timestamp;
     }
 
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public ByteBuffer getValue() {
+    public Value getValue() {
         return value;
     }
 
@@ -40,22 +32,14 @@ public class Row {
     }
 
     public static Row of(@NotNull final ByteBuffer key, final ByteBuffer value) {
-        return new Row(key, value, System.currentTimeMillis());
-    }
-
-    public static Row ofData(@NotNull final ByteBuffer key, final ByteBuffer value, final long tombstone) {
-        return new Row(key, value, tombstone);
-    }
-
-    public boolean isTombstone() {
-        return this.timestamp < 0;
+        return new Row(key, Value.of(value));
     }
 
     public static Row ofTombstone(@NotNull final ByteBuffer key) {
-        return new Row(key, null, System.currentTimeMillis() * -1);
+        return new Row(key, Value.ofTombstone());
     }
 
     public int getSize() {
-        return 2 * Integer.BYTES + Long.BYTES + key.remaining() + value.remaining();
+        return Integer.BYTES + key.remaining() + value.getSize();
     }
 }

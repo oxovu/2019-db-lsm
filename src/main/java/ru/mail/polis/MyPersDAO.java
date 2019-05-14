@@ -2,19 +2,19 @@ package ru.mail.polis;
 
 import com.google.common.collect.Iterators;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.file.Path;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
 public class MyPersDAO implements DAO {
 
@@ -26,10 +26,12 @@ public class MyPersDAO implements DAO {
     private final MemTable memTable;
     private final List<SSTable> storage;
 
+    private static final Logger log = LoggerFactory.getLogger(MyPersDAO.class);
+
     /**
      * Persistence DAO.
      *
-     * @param dir directory with files
+     * @param dir     directory with files
      * @param maxSize maximum size of memory table
      */
     public MyPersDAO(@NotNull final File dir, @NotNull final long maxSize) throws IOException {
@@ -41,17 +43,24 @@ public class MyPersDAO implements DAO {
     }
 
     private void readStorage() throws IOException {
-        for (final File file : Objects.requireNonNull(dir.listFiles())) {
-            if (file.getName().endsWith(SUFFIX)) {
-                final SSTable newSStable = new SSTable(FileChannel.open(Path.of(file.getAbsolutePath())));
-                storage.add(newSStable);
+        Files.walkFileTree(dir.toPath(), EnumSet.noneOf(FileVisitOption.class), 1, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(final Path path, final BasicFileAttributes attrs) throws IOException {
+                if (path.toString().endsWith(SUFFIX)) {
+                    try {
+                        storage.add(new SSTable(path));
+                    } catch (IllegalArgumentException iae) {
+                        log.error("Cannot create SSTable from " + path.getFileName() + ": " + iae.getMessage());
+                    }
+                }
+                return FileVisitResult.CONTINUE;
             }
-        }
+        });
     }
 
     public Iterator<Record> iterator(@NotNull final ByteBuffer from) {
         final Iterator<Row> rowIterator = rowIterator(from);
-        return Iterators.transform(rowIterator, i -> Record.of(i.getKey(), i.getValue()));
+        return Iterators.transform(rowIterator, i -> Record.of(i.getKey(), i.getValue().getData()));
     }
 
     private Iterator<Row> rowIterator(@NotNull final ByteBuffer from) {
@@ -62,7 +71,7 @@ public class MyPersDAO implements DAO {
         }
         final Iterator<Row> merged = Iterators.mergeSorted(iterators, Row.comparator);
         final Iterator<Row> collapsed = Iters.collapseEquals(merged, Row::getKey);
-        return Iterators.filter(collapsed, i -> !i.isTombstone());
+        return Iterators.filter(collapsed, i -> !i.getValue().isTombstone());
     }
 
     @Override
@@ -79,21 +88,18 @@ public class MyPersDAO implements DAO {
 
     @Override
     public void close() throws IOException {
-        flushTable();
+        if (memTable.getSize() > 0) flushTable();
     }
 
     private void flushTable() throws IOException {
         final String time = String.valueOf(System.currentTimeMillis());
         final String tmpName = time + TMP_SUFFIX;
+        final String Name = time + SUFFIX;
         final String path = dir.getAbsolutePath();
-        try (FileChannel channel = FileChannel.open(Path.of(path, tmpName), StandardOpenOption.CREATE_NEW,
-                StandardOpenOption.WRITE)) {
-            memTable.flush(channel);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        final String name = time + SUFFIX;
-        Files.move(Path.of(path, tmpName), Path.of(path, name), StandardCopyOption.ATOMIC_MOVE);
-        storage.add(new SSTable(FileChannel.open(Path.of(path, name))));
+        memTable.flush(Path.of(path, tmpName));
+        Files.move(Path.of(path, tmpName), Path.of(path, Name), StandardCopyOption.ATOMIC_MOVE);
+        storage.add(new SSTable(Path.of(path, Name)));
+
+
     }
 }
