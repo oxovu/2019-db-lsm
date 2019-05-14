@@ -12,7 +12,7 @@ public class Value implements Comparable<Value> {
     static final ByteBuffer EMPTY = ByteBuffer.allocate(0);
 
     /**
-     * Class for storing data in row
+     * Class for storing data in row.
      *
      * @param data what to record
      * @param timestamp when the record was created
@@ -33,6 +33,8 @@ public class Value implements Comparable<Value> {
     }
 
     /**
+     * Counts necessary size to store value.
+     *
      * @return necessary size to store value
      */
     public int getSize() {

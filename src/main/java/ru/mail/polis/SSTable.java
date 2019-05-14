@@ -123,7 +123,7 @@ public class SSTable implements MyTable {
     }
 
     /**
-     * Writes to file the rows with keys and values, offsets and rows number
+     * Writes to file the rows with keys and values, offsets and rows number.
      *
      * @param path where to write
      * @param iterator just iterator
