@@ -41,9 +41,10 @@ public class SSTable implements MyTable {
             if (position < 0 || position > mapped.limit()) {
                 throw new IllegalArgumentException();
             }
-            this.offsets = mapped.duplicate().position(position).limit(mapped.limit() - Integer.BYTES)
-                    .slice().asIntBuffer();
-            this.rows = mapped.duplicate().limit(offsets.position()).slice();
+            final ByteBuffer buffer = mapped.duplicate().position(position).limit(mapped.limit() - Integer.BYTES);
+            this.offsets = buffer.slice().asIntBuffer().asReadOnlyBuffer();
+            final int rowsPos = buffer.position();
+            this.rows = mapped.duplicate().limit(rowsPos).slice().asReadOnlyBuffer();
         }
     }
 
@@ -89,7 +90,7 @@ public class SSTable implements MyTable {
         final int offset = offsets.get(position);
         final int keySize = rows.getInt(offset);
         return rows.duplicate().position(offset + Integer.BYTES).limit(offset + Integer.BYTES + keySize)
-                .slice();
+                .slice().asReadOnlyBuffer();
     }
 
     private Row getRow(final int position) {
@@ -99,16 +100,16 @@ public class SSTable implements MyTable {
 
         int offset = offsets.get(position);
         final int keySize = rows.getInt(offset);
-        final ByteBuffer key = rows.duplicate().position(offset).limit(offset + Integer.BYTES + keySize).slice();
+        final ByteBuffer key = rows.duplicate().position(offset + Integer.BYTES).limit(offset + Integer.BYTES + keySize)
+                .slice().asReadOnlyBuffer();
         offset += Integer.BYTES + keySize;
         final long timestamp = rows.position(offset).getLong();
-        offset += Long.BYTES;
         if (timestamp < 0) {
             return new Row(key, new Value(Value.EMPTY, timestamp * -1, true));
         }
-        final int valSize = rows.getInt(offset);
-        offset += Integer.BYTES;
-        final ByteBuffer data = rows.duplicate().position(offset).limit(offset + valSize).slice();
+        final int valSize = rows.getInt(offset + Long.BYTES);
+        offset += Integer.BYTES + Long.BYTES;
+        final ByteBuffer data = rows.duplicate().position(offset).limit(offset + valSize).slice().asReadOnlyBuffer();
         return new Row(key, new Value(data, timestamp, false));
     }
 
